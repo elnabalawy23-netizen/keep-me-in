@@ -12,6 +12,8 @@ curl -fsSL https://raw.githubusercontent.com/elnabalawy23-netizen/keep-me-in/mai
 
 If the repository is private, sign in to GitHub CLI first (`brew install gh && gh auth login`), then run the same line. The script downloads the latest release, puts it in /Applications, clears the quarantine flag, and launches the app.
 
+**Manual download instead:** grab `KeepMeIn-<version>.zip` from the [latest release](https://github.com/elnabalawy23-netizen/keep-me-in/releases/latest), unzip, drag `Keep Me In.app` into Applications and open it. macOS blocks the first launch because the app is signed with a local certificate rather than an Apple Developer ID: open System Settings → Privacy & Security, scroll down and click **Open Anyway** (or run `xattr -dr com.apple.quarantine "/Applications/Keep Me In.app"`), then open it again. Once per Mac.
+
 First launch on each Mac: allow Keep Me In under System Settings → Privacy & Security → Accessibility. That is once per Mac. Updates installed with the same script keep the permission, because every release is signed with the same certificate.
 
 ## Requirements
