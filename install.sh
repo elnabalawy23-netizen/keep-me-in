@@ -1,9 +1,9 @@
 #!/bin/bash
 # Installs (or updates) the latest Keep Me In release into /Applications.
 #
-#   With GitHub CLI signed in (works for private repos):
+#   With GitHub CLI signed in:
 #     bash install.sh
-#   Public repo, no tools needed:
+#   No tools needed:
 #     curl -fsSL https://raw.githubusercontent.com/elnabalawy23-netizen/keep-me-in/main/install.sh | bash
 set -euo pipefail
 
