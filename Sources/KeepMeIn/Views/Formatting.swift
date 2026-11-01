@@ -28,3 +28,18 @@ enum Formatting {
         return (c.hour ?? 0) * 60 + (c.minute ?? 0)
     }
 }
+
+extension Formatting {
+    /// "00:42:18"
+    static func clock(_ seconds: TimeInterval) -> String {
+        let total = max(0, Int(seconds.rounded(.down)))
+        return String(format: "%02d:%02d:%02d", total / 3600, (total % 3600) / 60, total % 60)
+    }
+
+    static let shortTime: DateFormatter = {
+        let f = DateFormatter()
+        f.timeStyle = .short
+        f.dateStyle = .none
+        return f
+    }()
+}

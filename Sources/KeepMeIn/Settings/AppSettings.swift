@@ -40,10 +40,17 @@ final class AppSettings: ObservableObject {
         static let scheduleStartMinutes = "scheduleStartMinutes"
         static let scheduleEndMinutes = "scheduleEndMinutes"
         static let scheduleWeekdays = "scheduleWeekdays"
+        static let nudgeEnabled = "nudgeEnabled"
+        static let stopAfterMinutes = "stopAfterMinutes"
     }
 
     /// Teams flips you to "Away" after 5 minutes without input. Anything under that works.
     static let teamsAwayThreshold: TimeInterval = 5 * 60
+
+    /// Choices offered by the panel's "Move every" menu.
+    static let intervalChoices: [Double] = [30, 60, 120, 180, 240]
+    /// Choices offered by the panel's "Stop after" menu (minutes; 0 = until stopped).
+    static let stopAfterChoices: [Int] = [0, 30, 60, 120, 240, 480]
 
     @Published var isEnabled: Bool { didSet { defaults.set(isEnabled, forKey: Key.isEnabled) } }
     @Published var intervalSeconds: Double { didSet { defaults.set(intervalSeconds, forKey: Key.intervalSeconds) } }
@@ -57,6 +64,10 @@ final class AppSettings: ObservableObject {
     @Published var scheduleEndMinutes: Int { didSet { defaults.set(scheduleEndMinutes, forKey: Key.scheduleEndMinutes) } }
     /// Calendar weekday numbers: 1 = Sunday … 7 = Saturday.
     @Published var scheduleWeekdays: Set<Int> { didSet { defaults.set(Array(scheduleWeekdays).sorted(), forKey: Key.scheduleWeekdays) } }
+    /// Whether idle time triggers a nudge at all. Off means "only keep the display awake".
+    @Published var nudgeEnabled: Bool { didSet { defaults.set(nudgeEnabled, forKey: Key.nudgeEnabled) } }
+    /// Auto-pause the session after this many minutes. 0 = until stopped manually.
+    @Published var stopAfterMinutes: Int { didSet { defaults.set(stopAfterMinutes, forKey: Key.stopAfterMinutes) } }
 
     private let defaults: UserDefaults
 
@@ -73,6 +84,8 @@ final class AppSettings: ObservableObject {
             Key.scheduleStartMinutes: 9 * 60,
             Key.scheduleEndMinutes: 18 * 60,
             Key.scheduleWeekdays: [1, 2, 3, 4, 5], // Sunday–Thursday
+            Key.nudgeEnabled: true,
+            Key.stopAfterMinutes: 0,
         ])
 
         isEnabled = defaults.bool(forKey: Key.isEnabled)
@@ -85,5 +98,7 @@ final class AppSettings: ObservableObject {
         scheduleStartMinutes = defaults.integer(forKey: Key.scheduleStartMinutes)
         scheduleEndMinutes = defaults.integer(forKey: Key.scheduleEndMinutes)
         scheduleWeekdays = Set(defaults.array(forKey: Key.scheduleWeekdays) as? [Int] ?? [])
+        nudgeEnabled = defaults.bool(forKey: Key.nudgeEnabled)
+        stopAfterMinutes = defaults.integer(forKey: Key.stopAfterMinutes)
     }
 }

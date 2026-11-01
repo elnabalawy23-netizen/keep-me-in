@@ -40,6 +40,10 @@ final class ActivityEngine: ObservableObject {
     @Published private(set) var actionsToday = 0
     @Published private(set) var lastActionFailed = false
     @Published private(set) var isHoldingDisplay = false
+    /// When the current session (enabled period) started. Nil while paused.
+    @Published private(set) var sessionStartedAt: Date?
+    /// Updated every tick so views can derive live durations.
+    @Published private(set) var tickDate = Date()
 
     let settings: AppSettings
 
@@ -79,13 +83,26 @@ final class ActivityEngine: ObservableObject {
     }
 
     var menuBarSymbol: String {
-        if lastActionFailed && status.isWorking { return "person.crop.circle.badge.exclamationmark" }
         switch status {
-        case .disabled: return "person.crop.circle"
-        case .needsAccessibility: return "person.crop.circle.badge.exclamationmark"
-        case .outsideSchedule, .teamsNotRunning, .screenLocked: return "person.crop.circle.badge.moon"
-        case .userActive, .keepingAlive: return "person.crop.circle.badge.checkmark"
+        case .userActive, .keepingAlive:
+            return lastActionFailed ? "exclamationmark.triangle.fill" : "cup.and.heat.waves.fill"
+        case .needsAccessibility:
+            return "exclamationmark.triangle.fill"
+        case .disabled, .outsideSchedule, .teamsNotRunning, .screenLocked:
+            return "cup.and.saucer"
         }
+    }
+
+    /// Seconds the current session has been running.
+    var sessionElapsed: TimeInterval {
+        guard let sessionStartedAt else { return 0 }
+        return max(0, tickDate.timeIntervalSince(sessionStartedAt))
+    }
+
+    /// When the session will auto-pause, if "Stop after" is set.
+    var sessionEndsAt: Date? {
+        guard let sessionStartedAt, settings.stopAfterMinutes > 0 else { return nil }
+        return sessionStartedAt.addingTimeInterval(TimeInterval(settings.stopAfterMinutes * 60))
     }
 
     /// Seconds until the next nudge, or nil when the engine is parked.
@@ -103,6 +120,8 @@ final class ActivityEngine: ObservableObject {
 
     private func tick() {
         let now = Date()
+        tickDate = now
+        trackSession(now)
         accessibilityGranted = Permissions.isAccessibilityTrusted
         teamsRunning = TeamsWatcher.isRunning
         systemIdle = IdleMonitor.systemIdleSeconds()
@@ -121,11 +140,25 @@ final class ActivityEngine: ObservableObject {
 
         let interval = settings.intervalSeconds
         let sinceAttempt = lastAttemptAt.map { now.timeIntervalSince($0) } ?? .infinity
-        if systemIdle >= interval && sinceAttempt >= min(interval, 10) && !InputSimulator.userIsHoldingInput {
+        if settings.nudgeEnabled && systemIdle >= interval && sinceAttempt >= min(interval, 10) && !InputSimulator.userIsHoldingInput {
             perform(now: now)
         }
 
         status = realIdle < interval ? .userActive : .keepingAlive
+    }
+
+    /// Starts/stops the session clock with the enabled flag and applies "Stop after".
+    private func trackSession(_ now: Date) {
+        if settings.isEnabled {
+            if sessionStartedAt == nil { sessionStartedAt = now }
+            if let endsAt = sessionEndsAt, now >= endsAt {
+                log.info("Stop-after reached; pausing session")
+                settings.isEnabled = false
+                sessionStartedAt = nil
+            }
+        } else if sessionStartedAt != nil {
+            sessionStartedAt = nil
+        }
     }
 
     private func park(_ parked: Status) {

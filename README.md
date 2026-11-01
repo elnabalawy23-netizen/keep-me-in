@@ -2,6 +2,8 @@
 
 A tiny macOS menu bar app that keeps your Microsoft Teams presence on **Available**.
 
+<p align="center"><img src="docs/panel.png" width="400" alt="Keep Me In menu bar panel"></p>
+
 Teams flips you to *Away* after five minutes without keyboard or mouse input. Keep Me In watches the same idle clock and, once you have been quiet for a configurable interval (default 60 s), posts one invisible nudge: the pointer moves one pixel and straight back (or F15 is tapped, a key no Mac keyboard has). While you are actually typing or moving the mouse it does nothing. It also holds a "keep display awake" assertion so the Mac never locks itself.
 
 ## Install on any Mac
@@ -44,12 +46,11 @@ To sign from a second Mac, copy `~/.keepmein-signing/` there and run `make cert`
 
 ## Features
 
-- Menu bar panel with live status, idle time, countdown to the next nudge, nudge counter, Teams state, and display state
-- Mouse nudge or F15 mode
-- Interval 15 s to 4 min
-- Keep the display awake while active
-- Only run while Microsoft Teams is running
-- Pause while the screen is locked
+- Menu bar panel with session timer, idle time, last nudge time, pause/resume, and quick switches
+- Keep Mac awake and Move mouse can be toggled independently; nudge interval 30 s to 4 min
+- Stop after: auto-pause the session after 30 min to 8 h
+- Mouse nudge or F15 mode (Settings window)
+- Only run while Microsoft Teams is running; pause while the screen is locked
 - Schedule: hours and weekdays
 - Launch at login
 - Self-check that reports when nudges stop registering
