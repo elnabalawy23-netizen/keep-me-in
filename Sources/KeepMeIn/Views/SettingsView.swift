@@ -19,6 +19,7 @@ struct SettingsView: View {
 struct GeneralSettingsTab: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var engine: ActivityEngine
+    @EnvironmentObject private var updater: Updater
 
     var body: some View {
         Form {
@@ -49,6 +50,33 @@ struct GeneralSettingsTab: View {
                 Toggle("Pause while the screen is locked", isOn: $settings.pauseWhenScreenLocked)
             }
 
+            Section("Updates") {
+                Picker("Check for updates", selection: $settings.updateCheckDays) {
+                    Text("Daily").tag(1)
+                    Text("Weekly").tag(7)
+                    Text("Never").tag(0)
+                }
+                Toggle("Install updates automatically", isOn: $settings.autoInstallUpdates)
+                LabeledContent("Installed version") {
+                    Text("\(updater.currentVersion)\(updater.installedAt.map { ", updated \(Formatting.relativeDay($0))" } ?? "")")
+                        .foregroundStyle(.secondary)
+                }
+                LabeledContent("Last checked") {
+                    Text(updater.lastCheckedAt.map(Formatting.dateTime.string) ?? "Never").foregroundStyle(.secondary)
+                }
+                HStack(spacing: 10) {
+                    Button("Check now") { Task { await updater.check(installIfFound: false) } }
+                        .disabled(updater.state == .checking)
+                    if case .available(let v) = updater.state {
+                        Button("Update to \(v) now") { Task { await updater.install() } }
+                            .buttonStyle(.borderedProminent)
+                    }
+                    Spacer()
+                    Text(updateStatusText).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                    Link("Releases", destination: Updater.releasesPage).font(.caption)
+                }
+            }
+
             Section("System") {
                 LaunchAtLoginToggle()
                 LabeledContent("Accessibility access") {
@@ -64,6 +92,18 @@ struct GeneralSettingsTab: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    private var updateStatusText: String {
+        switch updater.state {
+        case .idle: return ""
+        case .checking: return "Checking…"
+        case .upToDate: return "You're on the latest version."
+        case .available(let v): return "Version \(v) is available."
+        case .downloading(let v): return "Downloading \(v)…"
+        case .installing(let v): return "Installing \(v), the app will relaunch."
+        case .failed(let message): return message
+        }
     }
 }
 

@@ -6,12 +6,14 @@ struct KeepMeInApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var settings = AppSettings.shared
     @StateObject private var engine = ActivityEngine(settings: AppSettings.shared)
+    @StateObject private var updater = Updater(settings: AppSettings.shared)
 
     var body: some Scene {
         MenuBarExtra {
             MenuPanelView()
                 .environmentObject(settings)
                 .environmentObject(engine)
+                .environmentObject(updater)
         } label: {
             Image(systemName: engine.menuBarSymbol)
         }
@@ -21,6 +23,7 @@ struct KeepMeInApp: App {
             SettingsView()
                 .environmentObject(settings)
                 .environmentObject(engine)
+                .environmentObject(updater)
         }
     }
 }

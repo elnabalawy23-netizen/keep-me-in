@@ -42,6 +42,8 @@ final class AppSettings: ObservableObject {
         static let scheduleWeekdays = "scheduleWeekdays"
         static let nudgeEnabled = "nudgeEnabled"
         static let stopAfterMinutes = "stopAfterMinutes"
+        static let updateCheckDays = "updateCheckDays"
+        static let autoInstallUpdates = "autoInstallUpdates"
     }
 
     /// Teams flips you to "Away" after 5 minutes without input. Anything under that works.
@@ -68,6 +70,10 @@ final class AppSettings: ObservableObject {
     @Published var nudgeEnabled: Bool { didSet { defaults.set(nudgeEnabled, forKey: Key.nudgeEnabled) } }
     /// Auto-pause the session after this many minutes. 0 = until stopped manually.
     @Published var stopAfterMinutes: Int { didSet { defaults.set(stopAfterMinutes, forKey: Key.stopAfterMinutes) } }
+    /// How often to look for a new release on GitHub. 0 = never.
+    @Published var updateCheckDays: Int { didSet { defaults.set(updateCheckDays, forKey: Key.updateCheckDays) } }
+    /// Install a found update without asking (the app relaunches itself).
+    @Published var autoInstallUpdates: Bool { didSet { defaults.set(autoInstallUpdates, forKey: Key.autoInstallUpdates) } }
 
     private let defaults: UserDefaults
 
@@ -86,6 +92,8 @@ final class AppSettings: ObservableObject {
             Key.scheduleWeekdays: [1, 2, 3, 4, 5], // Sunday–Thursday
             Key.nudgeEnabled: true,
             Key.stopAfterMinutes: 0,
+            Key.updateCheckDays: 7,
+            Key.autoInstallUpdates: true,
         ])
 
         isEnabled = defaults.bool(forKey: Key.isEnabled)
@@ -100,5 +108,7 @@ final class AppSettings: ObservableObject {
         scheduleWeekdays = Set(defaults.array(forKey: Key.scheduleWeekdays) as? [Int] ?? [])
         nudgeEnabled = defaults.bool(forKey: Key.nudgeEnabled)
         stopAfterMinutes = defaults.integer(forKey: Key.stopAfterMinutes)
+        updateCheckDays = defaults.integer(forKey: Key.updateCheckDays)
+        autoInstallUpdates = defaults.bool(forKey: Key.autoInstallUpdates)
     }
 }

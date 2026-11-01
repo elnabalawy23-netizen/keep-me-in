@@ -43,3 +43,22 @@ extension Formatting {
         return f
     }()
 }
+
+extension Formatting {
+    static let dateTime: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .short
+        return f
+    }()
+
+    /// "today 14:02", "yesterday 09:10", or "1 Nov".
+    static func relativeDay(_ date: Date) -> String {
+        let cal = Calendar.current
+        if cal.isDateInToday(date) { return "today \(shortTime.string(from: date))" }
+        if cal.isDateInYesterday(date) { return "yesterday \(shortTime.string(from: date))" }
+        let f = DateFormatter()
+        f.setLocalizedDateFormatFromTemplate(cal.isDate(date, equalTo: Date(), toGranularity: .year) ? "d MMM" : "d MMM yyyy")
+        return f.string(from: date)
+    }
+}

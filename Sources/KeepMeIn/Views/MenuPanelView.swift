@@ -4,6 +4,7 @@ import SwiftUI
 struct MenuPanelView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var engine: ActivityEngine
+    @EnvironmentObject private var updater: Updater
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
@@ -107,7 +108,21 @@ struct MenuPanelView: View {
     private var stats: some View {
         HStack(spacing: 32) {
             stat("Idle for", Formatting.clock(engine.realIdle))
-            stat("Last nudge", engine.lastActionAt.map(Formatting.time.string) ?? "Not yet")
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Last nudge")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.muted)
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(engine.lastActionAt.map(Formatting.time.string) ?? "Not yet")
+                        .font(.system(size: 15, weight: .medium))
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.text)
+                    Text("· \(engine.actionsToday) today")
+                        .font(.system(size: 13))
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.muted)
+                }
+            }
             Spacer()
         }
     }
@@ -285,6 +300,7 @@ struct MenuPanelView: View {
 
     private var footer: some View {
         HStack(spacing: 18) {
+            updateStatus
             Spacer()
             Rectangle().fill(Theme.separator).frame(width: 1, height: 22)
             Button("Quit") { NSApp.terminate(nil) }
@@ -298,6 +314,52 @@ struct MenuPanelView: View {
 
     private var separator: some View {
         Rectangle().fill(Theme.separator).frame(height: 1)
+    }
+
+    /// Bottom-left of the panel: version and when it was last updated, or the update in progress.
+    @ViewBuilder
+    private var updateStatus: some View {
+        switch updater.state {
+        case .downloading(let v), .installing(let v):
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small).tint(Theme.accent)
+                Text("Updating to \(v)…").font(.system(size: 13)).foregroundStyle(Theme.muted)
+            }
+        case .available(let v):
+            Button {
+                Task { await updater.install() }
+            } label: {
+                Label("Update to \(v)", systemImage: "arrow.down.circle.fill")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(Theme.accent)
+            }
+            .buttonStyle(.plain)
+            .help("Downloads the new version, verifies its signature and relaunches")
+        case .failed(let message):
+            Button {
+                Task { await updater.check(installIfFound: false) }
+            } label: {
+                Label("Update failed · retry", systemImage: "exclamationmark.circle")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Theme.danger)
+            }
+            .buttonStyle(.plain)
+            .help(message)
+        default:
+            Text(versionLine)
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.muted)
+                .help(updater.lastCheckedAt.map { "Last checked for updates \(Formatting.dateTime.string(from: $0))" } ?? "Updates have not been checked yet")
+        }
+    }
+
+    private var versionLine: String {
+        var line = "v\(updater.currentVersion)"
+        if let installedAt = updater.installedAt {
+            line += " · updated \(Formatting.relativeDay(installedAt))"
+        }
+        if updater.state == .checking { line += " · checking…" }
+        return line
     }
 
     private func intervalLabel(_ seconds: Double) -> String {

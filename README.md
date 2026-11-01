@@ -36,7 +36,7 @@ make dev        # swift run, no bundle, for quick iteration
 make watch-idle # live HID idle counter, handy to confirm nudges land
 ```
 
-To ship a new version: bump `CFBundleShortVersionString` in `Packaging/Info.plist`, commit, run `make release`. Other Macs pick it up by re-running the install line.
+To ship a new version: bump `CFBundleShortVersionString` in `Packaging/Info.plist`, commit, run `make release`. Every installed copy picks it up on its next check (weekly by default, daily or never in Settings → Updates), or immediately with **Check now**. Before swapping itself the app verifies that the downloaded bundle satisfies its own designated requirement, i.e. it is signed with the same certificate; anything else is refused. The panel footer shows the running version and when it was last updated.
 
 ### Why the certificate matters
 
@@ -53,6 +53,7 @@ To sign from a second Mac, copy `~/.keepmein-signing/` there and run `make cert`
 - Only run while Microsoft Teams is running; pause while the screen is locked
 - Schedule: hours and weekdays
 - Launch at login
+- Self-updating: checks GitHub weekly (or daily), installs the new release and relaunches; "Check now" in Settings
 - Self-check that reports when nudges stop registering
 
 ## Layout
